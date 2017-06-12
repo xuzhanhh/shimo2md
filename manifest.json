@@ -1,0 +1,16 @@
+{
+  "name": "shimo2md",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "shimo2md",
+  "browser_action": {
+//    "default_icon": "1.png"
+    "default_popup":"popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://shimo.im/doc/*"],
+      "js": ["bower_components/jQuery/dist/jquery.min.js","shimo2md.js"]
+    }
+  ]
+}
