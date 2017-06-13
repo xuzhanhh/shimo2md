@@ -30,9 +30,10 @@ setTimeout(run, 4000);
 // };
 //
 let md = "";
+let isMore=false;
 function run() {
     console.log("run");
-
+    addHeader();
     let start = $(":contains('稿件正文')")[14];
     while (start.nextElementSibling !== null) {
         start = start.nextElementSibling;
@@ -46,15 +47,67 @@ function run() {
     console.log(md);
     // document.getElementById('content').innerHTML=md;
 }
+
+function addHeader() {
+    let title = $($('#doc-title-input')[0]).attr('data-value');
+    let [school, major] = headerUniverse();
+    let [artist, graduate] = headerArtist();
+    let date = headerVersion();
+    md += `---
+title: ${title}
+date: ${date}
+writer:${artist}
+tags:
+    - ${school}
+    - ${major}
+---\n`;
+    md += `${artist} ${school} ${major} ${graduate}级\n`;
+
+    // console.log(md.length);
+}
+
+function headerVersion() {
+    let writer = $(":contains(定稿日期)");
+    writer = writer[writer.length - 2];
+    writer = writer.nextElementSibling;
+    // let artist=writer.children[0].innerHTML;
+    // let date = writer.children[1].innerHTML;
+    return writer.children[1].innerHTML;
+}
+
+function headerArtist() {
+    let writer = $(":contains(作者)");
+    writer = writer[writer.length - 2];
+    writer = writer.nextElementSibling;
+    let artist = writer.children[0].innerHTML;
+    let graduate = writer.children[2].innerHTML;
+    return [artist, graduate];
+}
+
+//获取就读学校与专业、所获学位表格的信息
+function headerUniverse() {
+    let table = $(":contains(学业阶段)");
+    table = table[table.length - 2];
+    table = table.nextElementSibling;
+    let school = table.children[1].innerHTML;
+    let major = table.children[2].innerHTML;
+    return [school, major];
+}
+
 function checkTitle(current) {
+    if(!isMore&&md.length>250){
+        md+="<!-- more -->\n";
+        isMore=true;
+    }
+
     md += isTextIndent(current);
     if (current.className != undefined && current.className.indexOf("heading-2") != -1) {
         //中标题
-        md += "## ";
+        md += "\n## ";
         md += outerTranslate(current.children);
     } else if (current.className != undefined && current.className.indexOf("heading-1") != -1) {
         //小标题
-        md += "### ";
+        md += "\n### ";
         md += outerTranslate(current.children);
     } else {
         //非标题
@@ -64,7 +117,7 @@ function checkTitle(current) {
 
 }
 
-function outerTranslate(current,enter=true) {
+function outerTranslate(current, enter = true) {
     let md = "";
     let length = current.length;
     for (let i = 0; i < length; i++) {
@@ -73,14 +126,14 @@ function outerTranslate(current,enter=true) {
         }
         else if (current[i].tagName === "INHERIT") {
 
-            md += outerTranslate(current[i].children,false)
+            md += outerTranslate(current[i].children, false)
         }
 
         //还有超链接的情况没写
         else if (current[i].tagName === "SPAN") {
 
             if (current[i].children.length > 0) {
-                md += outerTranslate(current[i].children,false)
+                md += outerTranslate(current[i].children, false)
             }
 
             //加粗的情况
@@ -92,7 +145,7 @@ function outerTranslate(current,enter=true) {
         }
         else if (current[i].tagName === "UL") {
             md += "* ";
-            md += outerTranslate($(current[i].children[0].children[0]),false);
+            md += outerTranslate($(current[i].children[0].children[0]), false);
         }
         else if (current[i].tagName === "FONT") {
             md += current[i].innerHTML;
@@ -100,16 +153,17 @@ function outerTranslate(current,enter=true) {
         else if (current[i].tagName === "B") {
             md += "** ";
             md += (current[i].innerHTML);
-            md +="** "
+            md += "** "
         }
         else if (current[i].tagName === "HR") {
-            md+="<hr>\n";
+            md += "<hr>\n";
         }
 
     }
-    if(enter===true){
+    if (enter === true) {
         md += "\n";
     }
+    // console.log(md.length);
     return md;
 }
 
