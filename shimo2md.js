@@ -2,33 +2,8 @@
  * Created by 2 on 2017/6/12.
  */
 
-
-// $(document).ready(function () {
-//     console.log('in plugin');
-//     while (start.nextElementSibling !== null) {
-//         start = start.nextElementSibling;
-//
-//         // let current = start.children;
-//         // let current = start;
-//
-//         checkTitle(start);
-//
-//     }
-//     console.log(md);
-// });
-
-// }
-
-
 setTimeout(run, 4000);
 
-// document.getElementById('clickToChange').onclick=function () {
-//     console.log("dousha");
-//     document.getElementById('content').innerHTML="dousha";
-//     // run();
-//     // document.getElementById('content').innerHTML="dousha";
-// };
-//
 let md = "";
 let isMore = false;
 function run() {
@@ -38,14 +13,10 @@ function run() {
     while (start.nextElementSibling !== null) {
         start = start.nextElementSibling;
 
-        // let current = start.children;
-        // let current = start;
-
         checkTitle(start);
 
     }
     console.log(md);
-    // document.getElementById('content').innerHTML=md;
 }
 
 function addHeader() {
@@ -62,7 +33,6 @@ tags:
 ---\n`;
     md += `${artist} ${school} ${major} ${graduate}级\n`;
 
-    // console.log(md.length);
 }
 
 function headerVersion() {
@@ -103,73 +73,94 @@ function checkTitle(current) {
     if (current.className != undefined && current.className.indexOf("heading-2") != -1) {
         //中标题
         md += "\n## ";
-        md += outerTranslate(current.children,true,true);
+        md += outerTranslate(current.children, true, true);
     } else if (current.className != undefined && current.className.indexOf("heading-1") != -1) {
         //小标题
         md += "\n### ";
-        md += outerTranslate(current.children,true,true);
+        md += outerTranslate(current.children, true, true);
     } else {
         //非标题
-        md += outerTranslate(current.children,true,false);
+        md += outerTranslate(current.children, true, false);
     }
 
 
 }
 
-function outerTranslate(current, enter, isTitle ) {
+function outerTranslate(current, enter, isTitle) {
     let md = "";
     let length = current.length;
     for (let i = 0; i < length; i++) {
-        if (current[i].tagName === "BR") {
-            md += "\n";
-        }
-        else if (current[i].tagName === "INHERIT") {
 
-            md += outerTranslate(current[i].children, false,isTitle)
-        }
-        //还有超链接的情况没写
-        else if (current[i].tagName === "SPAN" || current[i].tagName === "FONT" || current[i].tagName === "LI") {
-
-            if (current[i].children.length > 0) {
-                md += outerTranslate(current[i].children, false,isTitle)
+        switch (current[i].tagName) {
+            case "BR": {
+                md += "\n";
+                break;
             }
+            case "INHERIT": {
+                md += outerTranslate(current[i].children, false, isTitle);
+                break;
+            }
+            case "SPAN":
+            case "FONT":
+            case "LI": {
+                if (current[i].children.length > 0) {
+                    md += outerTranslate(current[i].children, false, isTitle)
+                }
 
-            //加粗的情况
-            else if (current[i].className.indexOf(" b") != -1) {
-                md += isBold(current[i].innerHTML);
-            } else {
+                //加粗的情况
+                else if (current[i].className.indexOf(" b") != -1) {
+                    md += isBold(current[i].innerHTML);
+                } else {
+                    md += replaceNbsp(current[i].innerHTML);
+                }
+                break;
+            }
+            case "OL":{
+                if (isTitle === false) {
+                    md += "1. ";
+                }
+                md += outerTranslate($(current[i].children), false, isTitle);
+                break;
+            }
+            case "UL": {
+                if (isTitle === false) {
+                    md += "* ";
+                }
+                md += outerTranslate($(current[i].children), false, isTitle);
+            }
+                break;
+            case "B": {
+                md += "** ";
                 md += replaceNbsp(current[i].innerHTML);
+                md += "** ";
             }
-        }
-        else if (current[i].tagName === "UL") {
-            if (isTitle === false) {
-                md += "* ";
+                break;
+            case "HR": {
+                md += "\n------------\n";
+                break;
             }
-            md += outerTranslate($(current[i].children), false,isTitle);
-        } else if (current[i].tagName === "B") {
-            md += isBold(current[i]);
-        }
+            case "A": {
+                md += `[${current[i].innerText}](${current[i].href})`;
+                break;
+            }
+            case "IMG":{
+                md +=`![](${current[i].src})`;
+                break;
+            }
+            case "U":{
+                md+=`<u>${replaceNbsp(current[i].innerHTML)}</u>`
+            }
 
-        else if (current[i].tagName === "B") {
-            md += "** ";
-            md += replaceNbsp(current[i].innerHTML);
-            md += "** "
         }
-        else if (current[i].tagName === "HR") {
-            md += "\n------------\n";
-        }
-        else if (current[i].tagName === "A") {
-            md += `[${current[i].innerText}](${current[i].href})`;
-        }
-
-
     }
+
     if (enter === true) {
         md += "\n";
     }
     // console.log(md.length);
     return md;
 }
+
 
 function isBold(innerhtml) {
 
@@ -188,38 +179,13 @@ function isTextIndent(current) {
     return "";
 }
 
-function replaceAll(str,oldStrRegex,newStr) {
-    if(str!==null){
-        str = str.replace(oldStrRegex,newStr)
+function replaceAll(str, oldStrRegex, newStr) {
+    if (str !== null) {
+        str = str.replace(oldStrRegex, newStr)
     }
     return str
 }
-function replaceNbsp(str) {
-    return replaceAll(replaceAll(str,/&nbsp;&nbsp;&nbsp;/g,'　'),/&nbsp;/g,' ');
-}
-//留个档而已
 
-// else if (current[i].tagName === "FONT") {
-//     if (current[i].children.length > 0) {
-//         md += outerTranslate(current[i].children, false)
-//     }
-//
-//     //加粗的情况
-//     else if (current[i].className.indexOf("b") != -1) {
-//         md += isBold(current[i].innerHTML);
-//     } else {
-//         md += current[i].innerHTML;
-//     }
-// }
-// else if(current[i].tagName === "LI"){
-//     if (current[i].children.length > 0) {
-//         md += outerTranslate(current[i].children, false)
-//     }
-//
-//     //加粗的情况
-//     else if (current[i].className.indexOf("b") != -1) {
-//         md += isBold(current[i].innerHTML);
-//     } else {
-//         md += current[i].innerHTML;
-//     }
-// }
+function replaceNbsp(str) {
+    return replaceAll(replaceAll(str, /&nbsp;&nbsp;&nbsp;/g, '　'), /&nbsp;/g, ' ');
+}
